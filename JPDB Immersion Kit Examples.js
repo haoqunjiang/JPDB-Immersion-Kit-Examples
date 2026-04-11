@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JPDB Immersion Kit Examples
 // @version      1.24
-// @description  Embeds anime images & audio examples into JPDB review and vocabulary pages using Immersion Kit's API. 
+// @description  Embeds anime images & audio examples into JPDB review and vocabulary pages using Immersion Kit's API.
 // @author       awoo
 // @namespace    jpdb-immersion-kit-examples
 // @match        https://jpdb.io/review*
@@ -13,8 +13,6 @@
 // @grant        GM_addElement
 // @grant        GM_xmlhttpRequest
 // @license      MIT
-// @downloadURL  https://update.greasyfork.org/scripts/507408/JPDB%20Immersion%20Kit%20Examples.user.js
-// @updateURL    https://update.greasyfork.org/scripts/507408/JPDB%20Immersion%20Kit%20Examples.meta.js
 // ==/UserScript==
 
 (function() {
@@ -1050,6 +1048,22 @@
 
     // has to be declared (referenced in multiple functions but definition requires variables local to one function)
     let hotkeysListener;
+
+    // Global hotkey 'i' to play the current example's audio
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'i') return;
+        const container = document.getElementById('immersion-kit-container');
+        const speakerBtn = container && container.querySelector('.ti-volume');
+        if (speakerBtn) speakerBtn.closest('a').click();
+    });
+
+    // Global hotkey 's' to show answer
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 's') return;
+        const tag = document.activeElement && document.activeElement.tagName;
+        const submitBtn = document.getElementById('show-answer')
+        if (submitBtn) submitBtn.click();
+    });
 
     function renderImageAndPlayAudio(vocab, shouldAutoPlaySound) {
         const example = state.examples[state.currentExampleIndex] || {};
@@ -2306,7 +2320,7 @@
                 state.vocab = parseVocabFromAnswer();
             } else if (url.includes('/kanji/')) {
                 state.vocab = parseVocabFromKanji();
-            } else {
+            } else if (url.includes('/review') && !url.endsWith('/review#a')) {
                 state.vocab = parseVocabFromReview();
             }
         } else {
@@ -2315,8 +2329,7 @@
 
         // Retrieve stored data for the current vocabulary
         const { index, exactState } = getStoredData(state.vocab);
-        state.currentExampleIndex = index > 0 ? index : Math.max(0, state.examples.findIndex(e => e.sentence && e.sentence.length >= CONFIG.MINIMUM_EXAMPLE_LENGTH));
-
+        state.currentExampleIndex = index;
         state.exactSearch = exactState;
 
         // Fetch data and embed image/audio if necessary
