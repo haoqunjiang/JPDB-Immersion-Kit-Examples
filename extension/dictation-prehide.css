@@ -6,6 +6,7 @@ html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) #immersion-kit-container .highlight,
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .jpdb-ik-vocab-highlight,
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) #immersion-kit-container span[style*="--outline-input-color"],
-html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-composed-of-kanji {
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-composed-of-kanji,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-composed-of-vocabulary {
     visibility: hidden !important;
 }
