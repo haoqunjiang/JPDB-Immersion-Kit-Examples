@@ -22,3 +22,7 @@ The extension can now add upload and playback controls for jpdb example sentence
 - Cache behavior: local first, remote on miss
 
 Cloudflare setup files live in [cloudflare](../cloudflare/). Start with [cloudflare/README.md](../cloudflare/README.md).
+
+## Dictation Mode
+
+Enable `Dictation Mode` in the in-page settings menu to mask the review word and its highlighted occurrences while reviewing. Click the masked sentence or press `d` to reveal it for the current card.

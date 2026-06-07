@@ -22,6 +22,21 @@
         "https://jpdb.io/kanji/*",
         "https://jpdb.io/search*"
       ],
+      "css": [
+        "dictation-prehide.css"
+      ],
+      "js": [
+        "dictation-bootstrap.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://jpdb.io/review*",
+        "https://jpdb.io/vocabulary/*",
+        "https://jpdb.io/kanji/*",
+        "https://jpdb.io/search*"
+      ],
       "js": [
         "content.js"
       ],

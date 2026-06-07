@@ -108,7 +108,8 @@
         VOCAB_SIZE: '250%',
         MINIMUM_EXAMPLE_LENGTH: 0,
         HOTKEYS: ['None'],
-        DEFAULT_TO_EXACT_SEARCH: true
+        DEFAULT_TO_EXACT_SEARCH: true,
+        DICTATION_MODE: false
         // On changing this config option, the icons change but the sentences don't, so you
         // have to click once to match up the icons and again to actually change the sentences
     };
@@ -128,6 +129,9 @@
         sharedAudioContext:  new (window.AudioContext || window.webkitAudioContext)(),
         currentSource: null,
         lastPlayId: 0,
+        dictationRevealed: false,
+        dictationVocab: '',
+        dictationSignature: '',
     };
 
     const CUSTOM_AUDIO_SETTINGS_KEY = 'customAudioSettings';
@@ -139,6 +143,10 @@
     const customAudioSettings = { ...CUSTOM_AUDIO_DEFAULTS };
     let customAudioSettingsPromise = null;
     let customAudioEnhanceTimer = null;
+    let dictationMaskTimer = null;
+    let dictationParticleRefreshTimer = null;
+    let dictationStyleElement = null;
+    let dictationMaskElementId = 0;
 
     const chromeStorage = {
         get(keys) {
@@ -1532,6 +1540,13 @@
             && getComputedStyle(element).display !== 'none';
     }
 
+    function isElementLaidOut(element) {
+        return Boolean(element)
+            && !element.hidden
+            && element.getClientRects().length > 0
+            && getComputedStyle(element).display !== 'none';
+    }
+
     function getPrimaryAnswerBox() {
         const selectors = [
             '.review-hidden .answer-box',
@@ -1607,7 +1622,12 @@
         if (event.key !== 'i') return;
         const container = document.getElementById('immersion-kit-container');
         const speakerBtn = container && container.querySelector('.ti-volume');
-        if (speakerBtn) speakerBtn.closest('a').click();
+        if (speakerBtn) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            event.stopPropagation();
+            speakerBtn.closest('a').click();
+        }
     });
 
     async function handleSentenceAudioHotkey(event) {
@@ -1643,6 +1663,20 @@
         if (event.key !== 'e') return;
         await handleSentenceAudioHotkey(event);
     });
+
+    // Global hotkey 'd' to reveal dictation masks
+    window.addEventListener('keydown', (event) => {
+        if (event.key.toLowerCase() !== 'd') return;
+        handleDictationRevealHotkey(event);
+    }, true);
+
+    // Fallback listener matching the simpler 'i' style
+    document.addEventListener('keydown', (event) => {
+        if (event.key.toLowerCase() !== 'd') return;
+        handleDictationRevealHotkey(event);
+    });
+
+    document.addEventListener('click', handleDictationRevealClick, true);
 
     // Global hotkey 's' to show answer
     document.addEventListener('keydown', (event) => {
@@ -1714,6 +1748,8 @@
         if (CONFIG.AUTO_PLAY_SOUND && shouldAutoPlaySound) {
             playAudio(soundUrl);
         }
+
+        scheduleDictationMasking();
 
         // Link hotkeys
         if (CONFIG.HOTKEYS.indexOf("None") === -1) {
@@ -1902,17 +1938,25 @@
         }
     }
 
+    function escapeRegExp(value) {
+        return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function createVocabHighlightSpan(text) {
+        return `<span class="jpdb-ik-vocab-highlight" style="color: var(--outline-input-color);">${text}</span>`;
+    }
+
     function highlightVocab(sentence, vocab) {
         // Highlight vocabulary in the sentence based on configuration
-        if (!CONFIG.COLORED_SENTENCE_TEXT) return sentence;
+        if (!CONFIG.COLORED_SENTENCE_TEXT || !vocab) return sentence;
 
         if (state.exactSearch) {
-            const regex = new RegExp(`(${vocab})`, 'g');
-            return sentence.replace(regex, '<span style="color: var(--outline-input-color);">$1</span>');
+            const regex = new RegExp(`(${escapeRegExp(vocab)})`, 'g');
+            return sentence.replace(regex, match => createVocabHighlightSpan(match));
         } else {
             return vocab.split('').reduce((acc, char) => {
-                const regex = new RegExp(char, 'g');
-                return acc.replace(regex, `<span style="color: var(--outline-input-color);">${char}</span>`);
+                const regex = new RegExp(escapeRegExp(char), 'g');
+                return acc.replace(regex, match => createVocabHighlightSpan(match));
             }, sentence);
         }
     }
@@ -2124,6 +2168,777 @@
                 console.error('Failed to enhance custom audio controls:', error);
             });
         }, 150);
+    }
+
+    function injectDictationStyles() {
+        if (dictationStyleElement) return;
+
+        dictationStyleElement = document.createElement('style');
+        dictationStyleElement.id = 'jpdb-dictation-mask-style';
+        dictationStyleElement.textContent = `
+            .jpdb-dictation-mask {
+                color: transparent !important;
+                -webkit-text-fill-color: transparent !important;
+                text-shadow: none !important;
+                cursor: pointer;
+            }
+
+            .jpdb-dictation-mask * {
+                color: transparent !important;
+                -webkit-text-fill-color: transparent !important;
+                text-shadow: none !important;
+            }
+
+            .jpdb-dictation-particle-layer {
+                position: absolute;
+                left: var(--jpdb-dictation-layer-left);
+                top: var(--jpdb-dictation-layer-top);
+                width: var(--jpdb-dictation-layer-width);
+                height: var(--jpdb-dictation-layer-height);
+                pointer-events: none;
+                z-index: 2147483000;
+                overflow: hidden;
+                opacity: 1;
+                transition: opacity 140ms ease, transform 140ms ease;
+            }
+
+            .jpdb-dictation-particle {
+                position: absolute;
+                left: var(--jpdb-particle-x);
+                top: var(--jpdb-particle-y);
+                width: var(--jpdb-particle-size);
+                height: var(--jpdb-particle-size);
+                border-radius: 999px;
+                background: rgba(var(--jpdb-dictation-particle-rgb, 18, 20, 24), var(--jpdb-particle-opacity));
+                filter: blur(var(--jpdb-particle-blur));
+                transform: translate3d(0, 0, 0) scale(var(--jpdb-particle-scale-a));
+                animation: jpdbDictationParticleDrift var(--jpdb-particle-duration) ease-in-out infinite;
+                animation-delay: var(--jpdb-particle-delay);
+                will-change: transform, opacity;
+            }
+
+            .jpdb-dictation-mask rt {
+                color: var(--jpdb-dictation-ruby-mask-color, white) !important;
+                -webkit-text-fill-color: var(--jpdb-dictation-ruby-mask-color, white) !important;
+                text-shadow: none !important;
+            }
+
+            html.jpdb-dictation-revealing .jpdb-dictation-mask {
+                color: var(--jpdb-dictation-reveal-color, currentColor) !important;
+                -webkit-text-fill-color: var(--jpdb-dictation-reveal-color, currentColor) !important;
+            }
+
+            html.jpdb-dictation-revealing .jpdb-dictation-mask * {
+                color: var(--jpdb-dictation-reveal-color, currentColor) !important;
+                -webkit-text-fill-color: var(--jpdb-dictation-reveal-color, currentColor) !important;
+            }
+
+            html.jpdb-dictation-revealing .jpdb-dictation-mask rt {
+                color: var(--jpdb-dictation-reveal-color, currentColor) !important;
+                -webkit-text-fill-color: var(--jpdb-dictation-reveal-color, currentColor) !important;
+            }
+
+            html.jpdb-dictation-revealing .jpdb-dictation-particle-layer {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+
+            @keyframes jpdbDictationParticleDrift {
+                0% {
+                    opacity: var(--jpdb-particle-opacity-a);
+                    transform: translate3d(0, 0, 0) scale(var(--jpdb-particle-scale-a));
+                }
+                27% {
+                    opacity: var(--jpdb-particle-opacity-b);
+                    transform: translate3d(var(--jpdb-particle-dx1), var(--jpdb-particle-dy1), 0) scale(var(--jpdb-particle-scale-b));
+                }
+                54% {
+                    opacity: var(--jpdb-particle-opacity-c);
+                    transform: translate3d(var(--jpdb-particle-dx2), var(--jpdb-particle-dy2), 0) scale(var(--jpdb-particle-scale-c));
+                }
+                78% {
+                    opacity: var(--jpdb-particle-opacity-d);
+                    transform: translate3d(var(--jpdb-particle-dx3), var(--jpdb-particle-dy3), 0) scale(var(--jpdb-particle-scale-b));
+                }
+                100% {
+                    opacity: var(--jpdb-particle-opacity-e);
+                    transform: translate3d(var(--jpdb-particle-dx4), var(--jpdb-particle-dy4), 0) scale(var(--jpdb-particle-scale-a));
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .jpdb-dictation-particle {
+                    animation: none;
+                }
+            }
+        `;
+        document.head.appendChild(dictationStyleElement);
+    }
+
+    function normalizeDictationText(text) {
+        return String(text || '').replace(/\s+/g, '').trim();
+    }
+
+    function getAnswerBoxPlainElement(answerBox) {
+        if (!answerBox) return null;
+        return Array.from(answerBox.children)
+            .find(element => element.classList && element.classList.contains('plain')) || null;
+    }
+
+    function getAnswerBoxVocabularyElement(answerBox) {
+        const plainElement = getAnswerBoxPlainElement(answerBox);
+        if (!plainElement) return null;
+
+        return Array.from(plainElement.children).find(element => {
+            if (!isElementLaidOut(element)) return false;
+            if (element.querySelector('.vocabulary-audio, .jpdb-custom-audio-controls')) return false;
+
+            const text = getVisibleTextWithoutRuby(element);
+            return text && text.length <= 80;
+        }) || null;
+    }
+
+    function getDictationWordFromPage() {
+        const answerVocabElement = getAnswerBoxVocabularyElement(getPrimaryAnswerBox());
+        if (answerVocabElement) {
+            return getVisibleTextWithoutRuby(answerVocabElement);
+        }
+
+        return resolveCurrentHeadword();
+    }
+
+    function getDictationCardSignature(word) {
+        const answerBox = getPrimaryAnswerBox();
+        const sentenceElement = answerBox && answerBox.querySelector('.card-sentence .sentence');
+        const sentenceText = sentenceElement ? stripSentenceNodeText(sentenceElement) : '';
+        const answerHref = answerBox && answerBox.querySelector('a.plain[href*="/vocabulary/"], a.plain[href*="/kanji/"]');
+        const hrefPart = answerHref ? answerHref.getAttribute('href') || '' : '';
+        return [
+            window.location.pathname,
+            window.location.search,
+            normalizeDictationText(word),
+            normalizeDictationText(sentenceText),
+            hrefPart
+        ].join('|');
+    }
+
+    function isDictationReviewPage() {
+        return Array.from(document.querySelectorAll('.review-hidden .answer-box, .review-reveal .answer-box'))
+            .some(isElementVisible);
+    }
+
+    function isDictationReviewPath() {
+        return window.location.pathname.startsWith('/review');
+    }
+
+    function isExactDictationWord(element, word) {
+        return normalizeDictationText(getVisibleTextWithoutRuby(element)) === normalizeDictationText(word);
+    }
+
+    function randomBetween(min, max) {
+        return min + Math.random() * (max - min);
+    }
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    function parseCssRgbColor(value) {
+        const match = String(value || '').match(/rgba?\(([^)]+)\)/i);
+        if (!match) return null;
+
+        const parts = match[1].split(',').map(part => part.trim());
+        if (parts.length < 3) return null;
+
+        const color = {
+            r: parseFloat(parts[0]),
+            g: parseFloat(parts[1]),
+            b: parseFloat(parts[2]),
+            a: parts.length >= 4 ? parseFloat(parts[3]) : 1
+        };
+
+        return Number.isFinite(color.r)
+            && Number.isFinite(color.g)
+            && Number.isFinite(color.b)
+            && Number.isFinite(color.a)
+            ? color
+            : null;
+    }
+
+    function getRelativeLuminance({ r, g, b }) {
+        const toLinear = value => {
+            const normalized = value / 255;
+            return normalized <= 0.03928
+                ? normalized / 12.92
+                : Math.pow((normalized + 0.055) / 1.055, 2.4);
+        };
+
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+
+    function getNearestOpaqueBackgroundColor(element) {
+        for (
+            let current = element;
+            current && current.nodeType === Node.ELEMENT_NODE;
+            current = current.parentElement
+        ) {
+            const color = parseCssRgbColor(getComputedStyle(current).backgroundColor);
+            if (color && color.a > 0.05) {
+                return color;
+            }
+        }
+
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? { r: 18, g: 20, b: 24, a: 1 }
+            : { r: 255, g: 255, b: 255, a: 1 };
+    }
+
+    function getDictationMaskPalette(element) {
+        const backgroundColor = getNearestOpaqueBackgroundColor(element);
+        const isDarkBackground = getRelativeLuminance(backgroundColor) < 0.38;
+
+        return isDarkBackground
+            ? {
+                particleRgb: '238, 241, 245',
+                rubyMaskColor: 'rgba(255, 255, 255, 0.72)'
+            }
+            : {
+                particleRgb: '18, 20, 24',
+                rubyMaskColor: 'rgba(255, 255, 255, 0.96)'
+            };
+    }
+
+    function getDictationParticleCount(rect) {
+        const area = rect.width * rect.height;
+        return clamp(Math.round(area / 70), 18, 84);
+    }
+
+    function setParticleStyle(particle, property, value) {
+        particle.style.setProperty(property, value);
+    }
+
+    function createDictationParticle() {
+        const particle = document.createElement('span');
+        const size = Math.random() > 0.82
+            ? randomBetween(2.4, 4.2)
+            : randomBetween(0.9, 2.4);
+        const opacity = Math.random() > 0.76
+            ? randomBetween(0.54, 0.88)
+            : randomBetween(0.22, 0.58);
+        const duration = randomBetween(1150, 2450);
+
+        particle.className = 'jpdb-dictation-particle';
+        setParticleStyle(particle, '--jpdb-particle-x', `${randomBetween(0, 100).toFixed(2)}%`);
+        setParticleStyle(particle, '--jpdb-particle-y', `${randomBetween(12, 88).toFixed(2)}%`);
+        setParticleStyle(particle, '--jpdb-particle-size', `${size.toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-opacity', opacity.toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-opacity-a', (opacity * randomBetween(0.48, 0.72)).toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-opacity-b', opacity.toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-opacity-c', (opacity * randomBetween(0.62, 0.84)).toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-opacity-d', (opacity * randomBetween(0.78, 0.96)).toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-opacity-e', (opacity * randomBetween(0.52, 0.74)).toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-blur', `${randomBetween(0, 0.85).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-duration', `${duration.toFixed(0)}ms`);
+        setParticleStyle(particle, '--jpdb-particle-delay', `${randomBetween(-duration, 0).toFixed(0)}ms`);
+        setParticleStyle(particle, '--jpdb-particle-dx1', `${randomBetween(-7, 7).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-dy1', `${randomBetween(-7, 2).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-dx2', `${randomBetween(-9, 9).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-dy2', `${randomBetween(-8, 3).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-dx3', `${randomBetween(-6, 6).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-dy3', `${randomBetween(-6, 2).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-dx4', `${randomBetween(-8, 8).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-dy4', `${randomBetween(-7, 2).toFixed(2)}px`);
+        setParticleStyle(particle, '--jpdb-particle-scale-a', randomBetween(0.76, 1.18).toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-scale-b', randomBetween(0.84, 1.34).toFixed(2));
+        setParticleStyle(particle, '--jpdb-particle-scale-c', randomBetween(0.70, 1.24).toFixed(2));
+        return particle;
+    }
+
+    function getDictationMaskElementId(element) {
+        if (!element.dataset.jpdbDictationMaskId) {
+            dictationMaskElementId += 1;
+            element.dataset.jpdbDictationMaskId = String(dictationMaskElementId);
+        }
+
+        return element.dataset.jpdbDictationMaskId;
+    }
+
+    function getDictationParticleLayersForElement(element) {
+        const maskId = element.dataset.jpdbDictationMaskId;
+        if (!maskId) return [];
+
+        return Array.from(document.querySelectorAll(`.jpdb-dictation-particle-layer[data-jpdb-dictation-owner="${maskId}"]`));
+    }
+
+    function removeDictationParticleLayersForElement(element) {
+        getDictationParticleLayersForElement(element).forEach(layer => layer.remove());
+    }
+
+    function getDictationFontSize(element) {
+        const computedStyle = getComputedStyle(element);
+        return parseFloat(computedStyle.fontSize) || 16;
+    }
+
+    function isDictationBaseTextNode(node) {
+        if (!node || !node.nodeValue || !node.nodeValue.trim()) return false;
+
+        const parentElement = node.parentElement;
+        if (!parentElement) return false;
+        if (parentElement.closest('rt, .jpdb-dictation-particle-layer, .jpdb-custom-audio-controls, a.icon-link, button')) return false;
+        return true;
+    }
+
+    function toPlainRect(rect) {
+        return {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height
+        };
+    }
+
+    function intersectPlainRects(first, second) {
+        const left = Math.max(first.left, second.left);
+        const top = Math.max(first.top, second.top);
+        const right = Math.min(first.right, second.right);
+        const bottom = Math.min(first.bottom, second.bottom);
+        const width = right - left;
+        const height = bottom - top;
+
+        if (width <= 0 || height <= 0) return null;
+        return { left, top, right, bottom, width, height };
+    }
+
+    function getDictationVisibilityContext(element) {
+        let clipRect = null;
+
+        for (
+            let ancestor = element.parentElement;
+            ancestor && ancestor !== document.documentElement;
+            ancestor = ancestor.parentElement
+        ) {
+            const style = getComputedStyle(ancestor);
+            if (
+                ancestor.hidden
+                || style.display === 'none'
+                || style.visibility === 'hidden'
+                || style.opacity === '0'
+            ) {
+                return { visible: false, clipRect: null };
+            }
+
+            const overflow = `${style.overflow} ${style.overflowX} ${style.overflowY}`;
+            if (/(hidden|clip|auto|scroll)/.test(overflow)) {
+                const ancestorRect = toPlainRect(ancestor.getBoundingClientRect());
+                clipRect = clipRect ? intersectPlainRects(clipRect, ancestorRect) : ancestorRect;
+                if (!clipRect) return { visible: false, clipRect: null };
+            }
+        }
+
+        return { visible: true, clipRect };
+    }
+
+    function hasVisibleDictationArea(element) {
+        if (!isElementLaidOut(element)) return false;
+
+        const { visible, clipRect } = getDictationVisibilityContext(element);
+        if (!visible) {
+            return false;
+        }
+
+        if (!clipRect) {
+            return true;
+        }
+
+        return Array.from(element.getClientRects()).some(rect => {
+            const intersection = intersectPlainRects(toPlainRect(rect), clipRect);
+            return Boolean(intersection && intersection.width > 1 && intersection.height > 1);
+        });
+    }
+
+    function getDictationBaseTextClientRects(element) {
+        const rects = [];
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode(node) {
+                    return isDictationBaseTextNode(node)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                }
+            }
+        );
+
+        while (walker.nextNode()) {
+            const range = document.createRange();
+            range.selectNodeContents(walker.currentNode);
+            rects.push(...Array.from(range.getClientRects())
+                .filter(rect => rect.width > 0.5 && rect.height > 0.5));
+            range.detach?.();
+        }
+
+        if (rects.length > 0) return rects;
+
+        const fallbackRect = element.getBoundingClientRect();
+        return fallbackRect.width > 0 && fallbackRect.height > 0 ? [fallbackRect] : [];
+    }
+
+    function createDictationOverlayRect(clientRect, fontSize) {
+        const horizontalPadding = Math.max(2, fontSize * 0.05);
+        const height = clamp(fontSize * 0.84, 8, Math.max(8, clientRect.height));
+        const bottomAdjustment = fontSize * 0.05;
+        const top = clientRect.bottom - height - bottomAdjustment;
+
+        return {
+            left: clientRect.left - horizontalPadding,
+            top,
+            right: clientRect.right + horizontalPadding,
+            bottom: top + height,
+            width: clientRect.width + horizontalPadding * 2,
+            height
+        };
+    }
+
+    function mergeDictationOverlayRects(rects) {
+        const rows = [];
+        const sortedRects = [...rects].sort((left, right) => left.top - right.top || left.left - right.left);
+
+        sortedRects.forEach(rect => {
+            const rectCenter = rect.top + rect.height / 2;
+            const row = rows.find(candidate => {
+                const rowCenter = candidate.top + candidate.height / 2;
+                return Math.abs(rowCenter - rectCenter) <= Math.max(4, Math.max(candidate.height, rect.height) * 0.45);
+            });
+
+            if (!row) {
+                rows.push({ ...rect });
+                return;
+            }
+
+            row.left = Math.min(row.left, rect.left);
+            row.top = Math.min(row.top, rect.top);
+            row.right = Math.max(row.right, rect.right);
+            row.bottom = Math.max(row.bottom, rect.bottom);
+            row.width = row.right - row.left;
+            row.height = row.bottom - row.top;
+        });
+
+        return rows;
+    }
+
+    function getDictationOverlayRects(element) {
+        const fontSize = getDictationFontSize(element);
+        const { visible, clipRect } = getDictationVisibilityContext(element);
+        if (!visible) {
+            return [];
+        }
+
+        const clientRects = getDictationBaseTextClientRects(element);
+        const overlayRects = clientRects
+            .map(rect => createDictationOverlayRect(rect, fontSize))
+            .map(rect => clipRect ? intersectPlainRects(rect, clipRect) : rect)
+            .filter(rect => rect && rect.width > 1 && rect.height > 1);
+        return mergeDictationOverlayRects(overlayRects);
+    }
+
+    function createDictationOverlaySignature(rects) {
+        return rects
+            .map(rect => [
+                Math.round(rect.left + window.scrollX),
+                Math.round(rect.top + window.scrollY),
+                Math.round(rect.width),
+                Math.round(rect.height)
+            ].join(':'))
+            .join('|');
+    }
+
+    function positionDictationParticleLayer(layer, rect) {
+        layer.style.setProperty('--jpdb-dictation-layer-left', `${(rect.left + window.scrollX).toFixed(2)}px`);
+        layer.style.setProperty('--jpdb-dictation-layer-top', `${(rect.top + window.scrollY).toFixed(2)}px`);
+        layer.style.setProperty('--jpdb-dictation-layer-width', `${rect.width.toFixed(2)}px`);
+        layer.style.setProperty('--jpdb-dictation-layer-height', `${rect.height.toFixed(2)}px`);
+    }
+
+    function createDictationParticleLayer(element, rect) {
+        const maskId = getDictationMaskElementId(element);
+        const layer = document.createElement('span');
+        const particleCount = getDictationParticleCount(rect);
+
+        layer.className = 'jpdb-dictation-particle-layer';
+        layer.dataset.jpdbDictationOwner = maskId;
+        layer.setAttribute('aria-hidden', 'true');
+        layer.style.setProperty('--jpdb-dictation-particle-rgb', element.dataset.jpdbDictationParticleRgb || '18, 20, 24');
+        positionDictationParticleLayer(layer, rect);
+
+        for (let i = 0; i < particleCount; i++) {
+            layer.appendChild(createDictationParticle());
+        }
+
+        document.body.appendChild(layer);
+    }
+
+    function updateDictationMaskPalette(element) {
+        const palette = getDictationMaskPalette(element);
+        element.dataset.jpdbDictationParticleRgb = palette.particleRgb;
+        element.style.setProperty('--jpdb-dictation-ruby-mask-color', palette.rubyMaskColor);
+        getDictationParticleLayersForElement(element).forEach(layer => {
+            layer.style.setProperty('--jpdb-dictation-particle-rgb', palette.particleRgb);
+        });
+    }
+
+    function ensureDictationParticleLayers(element) {
+        const overlayRects = getDictationOverlayRects(element);
+        const signature = createDictationOverlaySignature(overlayRects);
+
+        if (element.dataset.jpdbDictationOverlaySignature === signature && getDictationParticleLayersForElement(element).length > 0) {
+            getDictationParticleLayersForElement(element).forEach(layer => {
+                layer.style.setProperty('--jpdb-dictation-particle-rgb', element.dataset.jpdbDictationParticleRgb || '18, 20, 24');
+            });
+            return;
+        }
+
+        removeDictationParticleLayersForElement(element);
+        element.dataset.jpdbDictationOverlaySignature = signature;
+
+        overlayRects.forEach(rect => {
+            createDictationParticleLayer(element, rect);
+        });
+    }
+
+    function refreshDictationParticleLayers() {
+        document.querySelectorAll('.jpdb-dictation-particle-layer').forEach(layer => layer.remove());
+        document.querySelectorAll('.jpdb-dictation-mask').forEach(element => {
+            ensureDictationParticleLayers(element);
+        });
+    }
+
+    function removeOrphanDictationParticleLayers() {
+        document.querySelectorAll('.jpdb-dictation-particle-layer').forEach(layer => {
+            const ownerId = layer.dataset.jpdbDictationOwner;
+            if (!ownerId || !document.querySelector(`.jpdb-dictation-mask[data-jpdb-dictation-mask-id="${ownerId}"]`)) {
+                layer.remove();
+            }
+        });
+    }
+
+    function scheduleDictationParticleLayerRefresh() {
+        if (!CONFIG.DICTATION_MODE || state.dictationRevealed) return;
+        clearTimeout(dictationParticleRefreshTimer);
+        dictationParticleRefreshTimer = setTimeout(refreshDictationParticleLayers, 90);
+    }
+
+    function ensureDictationParticleLayer(element) {
+        ensureDictationParticleLayers(element);
+    }
+
+    function unmaskDictationElement(element) {
+        removeDictationParticleLayersForElement(element);
+        element.classList.remove('jpdb-dictation-mask');
+        delete element.dataset.jpdbDictationMaskId;
+        delete element.dataset.jpdbDictationOverlaySignature;
+        delete element.dataset.jpdbDictationParticleRgb;
+        element.style.removeProperty('--jpdb-dictation-reveal-color');
+        element.style.removeProperty('--jpdb-dictation-ruby-mask-color');
+    }
+
+    function applyDictationMask(element) {
+        if (!element) return;
+        if (element.closest('.jpdb-custom-audio-controls')) return;
+        updateDictationMaskPalette(element);
+        if (element.classList.contains('jpdb-dictation-mask')) {
+            ensureDictationParticleLayer(element);
+            return;
+        }
+
+        const computedStyle = getComputedStyle(element);
+        element.style.setProperty('--jpdb-dictation-reveal-color', computedStyle.color || 'currentColor');
+        element.classList.add('jpdb-dictation-mask');
+        ensureDictationParticleLayer(element);
+    }
+
+    function clearDictationMasks({ keepRevealClasses = false } = {}) {
+        document.querySelectorAll('.jpdb-dictation-mask').forEach(element => {
+            unmaskDictationElement(element);
+        });
+        document.querySelectorAll('.jpdb-dictation-particle-layer').forEach(layer => layer.remove());
+
+        if (!keepRevealClasses) {
+            document.documentElement.classList.remove('jpdb-dictation-mode-active', 'jpdb-dictation-revealing', 'jpdb-dictation-revealed');
+            document.documentElement.classList.add('jpdb-dictation-mode-inactive');
+        }
+    }
+
+    function getDictationMaskTargets(word) {
+        const targets = new Set();
+        const answerBox = getPrimaryAnswerBox();
+        const answerVocabElement = getAnswerBoxVocabularyElement(answerBox);
+        if (answerVocabElement && isExactDictationWord(answerVocabElement, word)) {
+            targets.add(answerVocabElement);
+        }
+
+        const highlightedSelectors = [
+            '.answer-box .highlight',
+            '.result.vocabulary .highlight',
+            '.subsection-examples .highlight',
+            '#immersion-kit-container .highlight',
+            '.jpdb-ik-vocab-highlight',
+            '#immersion-kit-container span[style*="--outline-input-color"]'
+        ].join(', ');
+
+        document.querySelectorAll(highlightedSelectors).forEach(element => {
+            targets.add(element);
+        });
+
+        document.querySelectorAll('.review-reveal .answer-box a.plain[href*="/vocabulary/"], .review-reveal .answer-box a.plain[href*="/kanji/"]').forEach(element => {
+            if (hasVisibleDictationArea(element) && isExactDictationWord(element, word)) {
+                targets.add(element);
+            }
+        });
+
+        return Array.from(targets).filter(element => {
+            if (element.closest('.jpdb-custom-audio-controls')) return false;
+            return hasVisibleDictationArea(element);
+        });
+    }
+
+    function updateDictationCardState(word) {
+        const signature = getDictationCardSignature(word);
+        if (signature === state.dictationSignature) return;
+
+        state.dictationSignature = signature;
+        state.dictationVocab = word;
+        state.dictationRevealed = false;
+        document.documentElement.classList.remove('jpdb-dictation-revealing', 'jpdb-dictation-revealed');
+    }
+
+    function updateDictationModeClass() {
+        if (!CONFIG.DICTATION_MODE || !isDictationReviewPath()) {
+            document.documentElement.classList.remove('jpdb-dictation-mode-active');
+            document.documentElement.classList.add('jpdb-dictation-mode-inactive');
+            return;
+        }
+
+        const word = getDictationWordFromPage();
+        if (word) {
+            updateDictationCardState(word);
+        }
+
+        document.documentElement.classList.remove('jpdb-dictation-mode-inactive');
+        document.documentElement.classList.add('jpdb-dictation-mode-active');
+    }
+
+    function syncDictationMasking() {
+        injectDictationStyles();
+        removeOrphanDictationParticleLayers();
+        updateDictationModeClass();
+
+        if (!CONFIG.DICTATION_MODE || !isDictationReviewPath()) {
+            clearDictationMasks();
+            return;
+        }
+
+        if (!isDictationReviewPage()) {
+            clearDictationMasks({ keepRevealClasses: true });
+            document.documentElement.classList.remove('jpdb-dictation-revealing', 'jpdb-dictation-revealed');
+            return;
+        }
+
+        const word = getDictationWordFromPage();
+        if (!word) {
+            clearDictationMasks();
+            return;
+        }
+
+        updateDictationCardState(word);
+        if (state.dictationRevealed) {
+            clearDictationMasks({ keepRevealClasses: true });
+            return;
+        }
+
+        document.documentElement.classList.remove('jpdb-dictation-revealed');
+        const maskTargets = getDictationMaskTargets(word);
+        const maskTargetSet = new Set(maskTargets);
+        document.querySelectorAll('.jpdb-dictation-mask').forEach(element => {
+            if (!maskTargetSet.has(element)) {
+                unmaskDictationElement(element);
+            }
+        });
+        maskTargets.forEach(applyDictationMask);
+    }
+
+    function scheduleDictationMasking() {
+        clearTimeout(dictationMaskTimer);
+        dictationMaskTimer = setTimeout(syncDictationMasking, 90);
+    }
+
+    function revealDictationMasks() {
+        if (!CONFIG.DICTATION_MODE || state.dictationRevealed) return false;
+
+        const maskedElements = Array.from(document.querySelectorAll('.jpdb-dictation-mask'));
+        if (maskedElements.length === 0) {
+            syncDictationMasking();
+            if (!document.querySelector('.jpdb-dictation-mask')) return false;
+        }
+
+        state.dictationRevealed = true;
+        document.documentElement.classList.remove('jpdb-dictation-revealed');
+        document.documentElement.classList.add('jpdb-dictation-revealing');
+
+        setTimeout(() => {
+            clearDictationMasks({ keepRevealClasses: true });
+            document.documentElement.classList.remove('jpdb-dictation-revealing');
+            document.documentElement.classList.add('jpdb-dictation-revealed');
+        }, 160);
+
+        return true;
+    }
+
+    function isDictationInteractiveElement(element) {
+        return Boolean(element.closest('.jpdb-custom-audio-controls, a, button, input, textarea, select, [role="button"]'));
+    }
+
+    function getElementFromEventTarget(target) {
+        if (target instanceof Element) return target;
+        if (target && target.parentElement) return target.parentElement;
+        return null;
+    }
+
+    function handleDictationRevealClick(event) {
+        if (!CONFIG.DICTATION_MODE || state.dictationRevealed || !isDictationReviewPage()) return;
+
+        const target = getElementFromEventTarget(event.target);
+        if (!target) return;
+        if (isDictationInteractiveElement(target) && !target.closest('.jpdb-dictation-mask')) return;
+
+        const revealTarget = target.closest([
+            '.jpdb-dictation-mask',
+            '.answer-box > .plain',
+            '.answer-box .card-sentence .sentence',
+            '.subsection-examples .used-in .jp',
+            '#immersion-kit-container #image-wrapper'
+        ].join(', '));
+
+        if (!revealTarget) return;
+        if (revealDictationMasks()) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            event.stopPropagation();
+        }
+    }
+
+    function handleDictationRevealHotkey(event) {
+        if (event.__jpdbDictationRevealHandled) return;
+        if (shouldIgnoreGlobalHotkey(event)) return;
+        if (!CONFIG.DICTATION_MODE || !isDictationReviewPage()) return;
+
+        event.__jpdbDictationRevealHandled = true;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        revealDictationMasks();
     }
 
     function isCustomAudioSentenceTarget(sentenceElement) {
@@ -2893,10 +3708,17 @@
     }
 
     function finalizeSaveConfig() {
+        const wasDictationMode = CONFIG.DICTATION_MODE;
         loadConfig();
+        if (CONFIG.DICTATION_MODE && !wasDictationMode) {
+            state.dictationSignature = '';
+            state.dictationRevealed = false;
+        }
         window.removeEventListener('keydown', hotkeysListener);
         renderImageAndPlayAudio(state.vocab, CONFIG.AUTO_PLAY_SOUND);
         scheduleCustomAudioEnhancement();
+        updateDictationModeClass();
+        scheduleDictationMasking();
         const overlay = document.getElementById('overlayMenu');
         if (overlay) {
             document.body.removeChild(overlay);
@@ -3468,6 +4290,8 @@
         // Initialize state and determine vocabulary based on URL
         state.embedAboveSubsectionMeanings = false;
         scheduleCustomAudioEnhancement();
+        updateDictationModeClass();
+        scheduleDictationMasking();
 
         const url = window.location.href;
         const machineTranslationFrame = document.getElementById('machine-translation-frame');
@@ -3506,6 +4330,7 @@
                 preloadImages();
                 embedImageAndPlayAudio();
                 scheduleCustomAudioEnhancement();
+                scheduleDictationMasking();
             })
                 .catch(console.error);
         } else if (state.apiDataFetched) {
@@ -3514,6 +4339,7 @@
             setVocabSize();
             setPageWidth();
             scheduleCustomAudioEnhancement();
+            scheduleDictationMasking();
         }
     }
 
@@ -3532,6 +4358,8 @@
 
     const customAudioObserver = new MutationObserver(() => {
         scheduleCustomAudioEnhancement();
+        updateDictationModeClass();
+        scheduleDictationMasking();
     });
 
     // Function to apply styles
@@ -3557,15 +4385,20 @@
     window.addEventListener('load', onPageLoad);
     window.addEventListener('popstate', onPageLoad);
     window.addEventListener('hashchange', onPageLoad);
+    window.addEventListener('resize', scheduleDictationParticleLayerRefresh);
+    window.addEventListener('scroll', scheduleDictationParticleLayerRefresh, true);
 
     // Initial configuration and preloading
     loadConfig();
+    injectDictationStyles();
+    updateDictationModeClass();
     ensureCustomAudioSettingsLoaded().catch(error => {
         console.error('Failed to load custom audio settings:', error);
     });
     setPageWidth();
     setVocabSize();
     scheduleCustomAudioEnhancement();
+    scheduleDictationMasking();
     //preloadImages();
 
 })();
