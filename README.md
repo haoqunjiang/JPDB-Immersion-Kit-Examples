@@ -1,4 +1,14 @@
-# JPDB Immersion Kit Examples  
+# JPDB Immersion Kit Examples
+
+## Fork Notes
+
+This fork differs significantly from the upstream [AwooDesu/JPDB-Immersion-Kit-Examples](https://github.com/AwooDesu/JPDB-Immersion-Kit-Examples) project. The upstream project is still the original userscript; this fork keeps that script and adds:
+
+- An unpacked Chrome extension build in [extension](extension/).
+- A migration/export userscript in [userscripts](userscripts/) for backing up userscript data.
+- Custom jpdb sentence-audio upload/playback for examples without built-in audio.
+- Optional Cloudflare Worker + R2 storage for custom audio, with local IndexedDB caching.
+- Keyboard shortcut support for playing the current jpdb answer-box sentence audio.
 
 A userscript for **jpdb.io** that embeds anime examples from **ImmersionKit** directly into the site.  
 
@@ -49,6 +59,18 @@ The settings menu (**☰**) allows customization of the script's behavior:
 
 The script searches **ImmersionKit** for examples based on the current vocabulary and embeds them into **jpdb.io**. Audio can be played manually or automatically.  
 
+## Chrome Extension  
+
+This repo now also includes an unpacked Chrome extension build in [extension](extension/) plus an export-only migration userscript in [userscripts/JPDB Immersion Kit Examples Export.user.js](userscripts/JPDB%20Immersion%20Kit%20Examples%20Export.user.js).
+
+Migration flow:
+
+1. Load [extension/manifest.json](extension/manifest.json) as an unpacked extension in Chrome.
+2. Disable the original userscript so it does not run at the same time as the extension.
+3. If you want a portable backup, install the export userscript in Violentmonkey, download the backup JSON, then use `Import Backup` from the extension's in-page settings menu on `jpdb.io`.
+
+The extension also supports uploading custom sentence audio for jpdb examples that are missing built-in audio. The recommended remote backend is Cloudflare Worker + R2; setup files are in [cloudflare](cloudflare/).
+
 ### **Audio Playback Note**  
 If autoplay doesn't work, check your browser's site settings (click the lock icon next to the URL) and allow automatic audio playback.  
 
@@ -75,4 +97,3 @@ Contributions are welcome! If you encounter bugs, have feature suggestions, or w
 ## License  
 
 This project is licensed under the **MIT License**.  
-

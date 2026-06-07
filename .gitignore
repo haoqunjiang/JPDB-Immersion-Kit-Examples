@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+cloudflare/node_modules/
+
+# Cloudflare local state and secrets
+.wrangler/
+cloudflare/.wrangler/
+cloudflare/wrangler.toml
+.dev.vars
+cloudflare/.dev.vars
+.env
+.env.*
+!.env.example
+
+# Extension/package outputs
+*.crx
+*.pem
+*.zip
+dist/
+build/
+
+# Local custom-audio test files
+*.mp3
+*.m4a
+*.wav
+*.ogg

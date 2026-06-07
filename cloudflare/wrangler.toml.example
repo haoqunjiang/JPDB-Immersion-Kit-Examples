@@ -1,0 +1,10 @@
+name = "jpdb-custom-audio"
+main = "custom-audio-worker.js"
+compatibility_date = "2026-04-12"
+
+[[r2_buckets]]
+binding = "CUSTOM_AUDIO_BUCKET"
+bucket_name = "jpdb-custom-audio"
+
+[vars]
+ALLOWED_ORIGIN = "https://jpdb.io"

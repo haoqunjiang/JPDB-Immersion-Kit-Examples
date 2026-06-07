@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "JPDB Immersion Kit Examples",
+  "version": "1.25.0",
+  "description": "Embeds Immersion Kit examples into jpdb.io review, vocabulary, kanji, and search pages.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://jpdb.io/*",
+    "https://apiv2.immersionkit.com/*",
+    "https://us-southeast-1.linodeobjects.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://jpdb.io/review*",
+        "https://jpdb.io/vocabulary/*",
+        "https://jpdb.io/kanji/*",
+        "https://jpdb.io/search*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
