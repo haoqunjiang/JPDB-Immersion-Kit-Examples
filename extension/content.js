@@ -93,6 +93,7 @@
 
     const CONFIG = {
         IMAGE_WIDTH: '400px',
+        SHOW_EXAMPLE_IMAGES: true,
         WIDE_MODE: true,
         DEFINITIONS_ON_RIGHT_IN_WIDE_MODE: false,
         ARROW_WIDTH: '75px',
@@ -1719,12 +1720,12 @@
             wrapperDiv.appendChild(createTextElement('BLACKLISTED'));
             shouldAutoPlaySound = false;
         } else if (state.apiDataFetched) {
-            if (imageUrl) {
+            if (CONFIG.SHOW_EXAMPLE_IMAGES && imageUrl) {
                 const imageElement = createImageElement(wrapperDiv, imageUrl, vocab, state.exactSearch);
                 if (imageElement) {
                     imageElement.addEventListener('click', () => playAudio(soundUrl));
                 }
-            } else {
+            } else if (CONFIG.SHOW_EXAMPLE_IMAGES) {
                 wrapperDiv.appendChild(createTextElement(`NO IMAGE\n(${title})`));
             }
             // Append sentence and translation or a placeholder text
@@ -1819,6 +1820,8 @@
 
     // Preload images
     function preloadImages() {
+        if (!CONFIG.SHOW_EXAMPLE_IMAGES) return;
+
         // Preload images around the current example index
         const preloadDiv = GM_addElement(document.body, 'div', { style: 'display: none;' });
         const startIndex = Math.max(0, state.currentExampleIndex - CONFIG.NUMBER_OF_PRELOADS);

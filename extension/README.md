@@ -26,3 +26,7 @@ Cloudflare setup files live in [cloudflare](../cloudflare/). Start with [cloudfl
 ## Dictation Mode
 
 Enable `Dictation Mode` in the in-page settings menu to mask the review word and its highlighted occurrences while reviewing. Click the masked sentence or press `d` to reveal it for the current card.
+
+## Sentence-Only Examples
+
+Disable `Show Example Images` in the in-page settings menu to hide Immersion Kit pictures while keeping the sentence, translation, audio, and navigation controls.
