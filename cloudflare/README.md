@@ -4,9 +4,9 @@ Recommended stack: **Cloudflare R2 + Cloudflare Workers**.
 
 Why this pair:
 
-- `R2` is the object store for the MP3 files.
+- `R2` is the object store for the MP3 files and the synced favorites JSON.
 - `Workers` gives you a small authenticated API for `GET` and `PUT`, plus CORS for the browser extension.
-- The extension keeps a local IndexedDB cache, so it only hits Cloudflare on upload and on cache miss.
+- The extension keeps custom audio in a local IndexedDB cache and favorites in localStorage, so it only hits Cloudflare when syncing.
 
 Files:
 
@@ -37,11 +37,15 @@ Open the extension menu on `jpdb.io` and fill in:
 - `Worker URL`: your deployed Worker URL, for example `https://jpdb-custom-audio.your-subdomain.workers.dev`
 - `Auth Token`: the same token you stored as `CUSTOM_AUDIO_TOKEN`
 - `Cache Max MB`: local cache size for uploaded or downloaded custom audio
+- `Sync Favorites`: enable automatic cross-device sync of selected Immersion Kit examples and blacklist entries
 
 ## API Contract
 
 - `PUT /audio/<sha256-key>` uploads or replaces an MP3 object.
 - `GET /audio/<sha256-key>` fetches the MP3 object.
+- `GET /favorites` fetches the synced favorites document.
+- `PUT /favorites` merges the uploaded favorites document into the remote copy and returns the merged document.
 - `OPTIONS /audio/<sha256-key>` handles CORS preflight.
+- `OPTIONS /favorites` handles CORS preflight.
 
 The extension computes the `<sha256-key>` from the current headword plus the sentence text, so the same sentence resolves to the same remote object.

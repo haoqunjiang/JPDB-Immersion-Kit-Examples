@@ -139,11 +139,21 @@
     const CUSTOM_AUDIO_DEFAULTS = {
         workerUrl: '',
         authToken: '',
-        cacheMaxMB: 250
+        cacheMaxMB: 250,
+        syncFavorites: false
     };
+    const FAVORITES_SYNC_STORAGE_KEY = 'favoritesSyncState';
+    const FAVORITES_SYNC_SCHEMA_VERSION = 1;
+    const FAVORITES_SYNC_REMOTE_PATH = '/favorites';
+    const FAVORITES_SYNC_DEBOUNCE_MS = 1500;
     const customAudioSettings = { ...CUSTOM_AUDIO_DEFAULTS };
     let customAudioSettingsPromise = null;
     let customAudioEnhanceTimer = null;
+    let favoritesSyncTimer = null;
+    let favoritesSyncInFlight = false;
+    let favoritesSyncApplyingRemote = false;
+    let favoritesSyncLocalRevision = 0;
+    let favoritesSyncStateQueue = Promise.resolve();
     let dictationMaskTimer = null;
     let dictationParticleRefreshTimer = null;
     let dictationStyleElement = null;
@@ -206,6 +216,7 @@
 
             nextSettings.workerUrl = normalizeCustomAudioWorkerUrl(nextSettings.workerUrl);
             nextSettings.cacheMaxMB = Math.max(1, Number(nextSettings.cacheMaxMB) || CUSTOM_AUDIO_DEFAULTS.cacheMaxMB);
+            nextSettings.syncFavorites = Boolean(nextSettings.syncFavorites);
 
             Object.assign(customAudioSettings, nextSettings);
             return customAudioSettings;
@@ -219,7 +230,8 @@
         const settingsToSave = {
             workerUrl: normalizeCustomAudioWorkerUrl(nextSettings.workerUrl),
             authToken: (nextSettings.authToken || '').trim(),
-            cacheMaxMB: Math.max(1, Number(nextSettings.cacheMaxMB) || CUSTOM_AUDIO_DEFAULTS.cacheMaxMB)
+            cacheMaxMB: Math.max(1, Number(nextSettings.cacheMaxMB) || CUSTOM_AUDIO_DEFAULTS.cacheMaxMB),
+            syncFavorites: Boolean(nextSettings.syncFavorites)
         };
 
         await chromeStorage.set({
@@ -538,18 +550,25 @@
     const configPrefix = 'CONFIG.'; // additional prefix for config variables to go after the scriptPrefix
     // do not change either of the above without adding code to handle the change
 
-    const setItem = (key, value) => { localStorage.setItem(scriptPrefix + key, value) }
+    const setItem = (key, value, options = {}) => {
+        const { trackFavoriteSync = true } = options;
+        localStorage.setItem(scriptPrefix + key, value);
+        if (trackFavoriteSync) {
+            trackFavoriteLocalSet(key, value);
+        }
+    }
     const getItem = (key) => {
         const prefixedValue = localStorage.getItem(scriptPrefix + key);
         if (prefixedValue !== null) { return prefixedValue }
         const nonPrefixedValue = localStorage.getItem(key);
         // to move away from non-prefixed values as fast as possible
-        if (nonPrefixedValue !== null) { setItem(key, nonPrefixedValue) }
+        if (nonPrefixedValue !== null) { setItem(key, nonPrefixedValue, { trackFavoriteSync: false }) }
         return nonPrefixedValue
     }
     const removeItem = (key) => {
         localStorage.removeItem(scriptPrefix + key);
-        localStorage.removeItem(key)
+        localStorage.removeItem(key);
+        trackFavoriteLocalDelete(key);
     }
 
     // Helper for transitioning to fully script-prefixed config state
@@ -581,6 +600,437 @@
         // and most importantly, to ensure the flag is never removed or modified
         // by the other script functions that check for the script prefix
         localStorage.setItem(`JPDBImmersionKit*Examples-CONFIG_VARIABLES_PREFIXED`, 'true');
+    }
+
+    // Favorite Sync
+    function isFavoriteSyncKey(key) {
+        return typeof key === 'string' && key.length > 0 && !key.startsWith(configPrefix);
+    }
+
+    function normalizeFavoriteSyncTimestamp(value) {
+        const timestamp = Number(value);
+        return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : 0;
+    }
+
+    function normalizeFavoritesSyncDocument(documentValue) {
+        const normalized = {
+            schemaVersion: FAVORITES_SYNC_SCHEMA_VERSION,
+            updatedAt: normalizeFavoriteSyncTimestamp(documentValue?.updatedAt),
+            entries: {},
+            deleted: {}
+        };
+
+        const sourceEntries = documentValue?.entries || {};
+        Object.entries(sourceEntries).forEach(([key, record]) => {
+            if (!isFavoriteSyncKey(key) || record?.value === undefined || record?.value === null) return;
+
+            const updatedAt = normalizeFavoriteSyncTimestamp(record.updatedAt);
+            if (!updatedAt) return;
+
+            normalized.entries[key] = {
+                value: String(record.value),
+                updatedAt
+            };
+            normalized.updatedAt = Math.max(normalized.updatedAt, updatedAt);
+        });
+
+        const sourceDeleted = documentValue?.deleted || {};
+        Object.entries(sourceDeleted).forEach(([key, record]) => {
+            if (!isFavoriteSyncKey(key)) return;
+
+            const updatedAt = normalizeFavoriteSyncTimestamp(record?.updatedAt);
+            if (!updatedAt) return;
+
+            normalized.deleted[key] = { updatedAt };
+            normalized.updatedAt = Math.max(normalized.updatedAt, updatedAt);
+        });
+
+        return normalized;
+    }
+
+    async function loadFavoritesSyncState() {
+        const stored = await chromeStorage.get(FAVORITES_SYNC_STORAGE_KEY);
+        return normalizeFavoritesSyncDocument(stored[FAVORITES_SYNC_STORAGE_KEY]);
+    }
+
+    async function saveFavoritesSyncState(documentValue) {
+        const normalized = normalizeFavoritesSyncDocument(documentValue);
+        await chromeStorage.set({
+            [FAVORITES_SYNC_STORAGE_KEY]: normalized
+        });
+        return normalized;
+    }
+
+    function collectLocalFavoriteEntries() {
+        const entries = {};
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const storageKey = localStorage.key(i);
+            if (!storageKey?.startsWith(scriptPrefix)) continue;
+
+            const key = storageKey.substring(scriptPrefix.length);
+            if (!isFavoriteSyncKey(key)) continue;
+
+            const value = localStorage.getItem(storageKey);
+            if (value !== null) {
+                entries[key] = value;
+            }
+        }
+
+        return entries;
+    }
+
+    function queueFavoritesSyncStateUpdate(updater) {
+        favoritesSyncStateQueue = favoritesSyncStateQueue
+            .catch(() => {})
+            .then(async () => {
+                const documentValue = await loadFavoritesSyncState();
+                const updatedDocument = normalizeFavoritesSyncDocument(updater(documentValue) || documentValue);
+                return await saveFavoritesSyncState(updatedDocument);
+            })
+            .catch(error => {
+                console.warn('Failed to update favorite sync metadata:', error);
+            });
+
+        return favoritesSyncStateQueue;
+    }
+
+    function queueFavoritesSyncStateReplacement(documentValue) {
+        favoritesSyncStateQueue = favoritesSyncStateQueue
+            .catch(() => {})
+            .then(() => saveFavoritesSyncState(documentValue));
+
+        return favoritesSyncStateQueue;
+    }
+
+    function trackFavoriteLocalSet(key, value) {
+        if (favoritesSyncApplyingRemote || !isFavoriteSyncKey(key)) return;
+
+        favoritesSyncLocalRevision += 1;
+        const updatedAt = Date.now();
+        queueFavoritesSyncStateUpdate(documentValue => {
+            documentValue.entries[key] = {
+                value: String(value),
+                updatedAt
+            };
+            delete documentValue.deleted[key];
+            documentValue.updatedAt = Math.max(documentValue.updatedAt, updatedAt);
+            return documentValue;
+        }).then(scheduleFavoritesAutoSync);
+    }
+
+    function trackFavoriteLocalDelete(key) {
+        if (favoritesSyncApplyingRemote || !isFavoriteSyncKey(key)) return;
+
+        favoritesSyncLocalRevision += 1;
+        const updatedAt = Date.now();
+        queueFavoritesSyncStateUpdate(documentValue => {
+            delete documentValue.entries[key];
+            documentValue.deleted[key] = { updatedAt };
+            documentValue.updatedAt = Math.max(documentValue.updatedAt, updatedAt);
+            return documentValue;
+        }).then(scheduleFavoritesAutoSync);
+    }
+
+    async function buildLocalFavoritesSyncDocument(remoteContext = null) {
+        await favoritesSyncStateQueue.catch(() => {});
+
+        const now = Date.now();
+        const storedDocument = await loadFavoritesSyncState();
+        const remoteDocument = normalizeFavoritesSyncDocument(remoteContext);
+        const localEntries = collectLocalFavoriteEntries();
+        const nextDocument = {
+            schemaVersion: FAVORITES_SYNC_SCHEMA_VERSION,
+            updatedAt: storedDocument.updatedAt,
+            entries: {},
+            deleted: { ...storedDocument.deleted }
+        };
+
+        Object.entries(localEntries).forEach(([key, value]) => {
+            const existing = storedDocument.entries[key];
+            const remoteEntry = remoteDocument.entries[key];
+            const remoteDeletedAt = remoteDocument.deleted[key]?.updatedAt || 0;
+            const remoteEntryAt = remoteEntry?.updatedAt || 0;
+            let updatedAt;
+
+            if (existing?.value === value) {
+                updatedAt = existing.updatedAt;
+            } else if (existing) {
+                updatedAt = now;
+            } else if (remoteEntry?.value === value) {
+                updatedAt = remoteEntryAt;
+            } else if (remoteDeletedAt || remoteEntryAt) {
+                // Metadata-less entries are legacy local data. Do not let them
+                // resurrect a remote deletion or overwrite an established remote choice.
+                updatedAt = 1;
+            } else {
+                updatedAt = now;
+            }
+
+            nextDocument.entries[key] = {
+                value,
+                updatedAt
+            };
+
+            const deletedAt = nextDocument.deleted[key]?.updatedAt || 0;
+            if (deletedAt <= updatedAt) {
+                delete nextDocument.deleted[key];
+            }
+
+            nextDocument.updatedAt = Math.max(nextDocument.updatedAt, updatedAt);
+        });
+
+        Object.entries(storedDocument.entries).forEach(([key, record]) => {
+            if (Object.prototype.hasOwnProperty.call(localEntries, key)) return;
+
+            const deletedAt = nextDocument.deleted[key]?.updatedAt || 0;
+            if (deletedAt < record.updatedAt) {
+                nextDocument.deleted[key] = { updatedAt: now };
+                nextDocument.updatedAt = Math.max(nextDocument.updatedAt, now);
+            }
+        });
+
+        return normalizeFavoritesSyncDocument(nextDocument);
+    }
+
+    async function mergeLatestLocalFavoritesIfChanged(remoteDocument, localRevisionAtStart) {
+        let mergedDocument = normalizeFavoritesSyncDocument(remoteDocument);
+        let observedLocalRevision = localRevisionAtStart;
+
+        while (favoritesSyncLocalRevision !== observedLocalRevision) {
+            observedLocalRevision = favoritesSyncLocalRevision;
+            const latestLocalDocument = await buildLocalFavoritesSyncDocument(mergedDocument);
+            mergedDocument = mergeFavoritesSyncDocuments(mergedDocument, latestLocalDocument);
+        }
+
+        return mergedDocument;
+    }
+
+    function mergeFavoritesSyncDocuments(...documents) {
+        const normalizedDocuments = documents.map(normalizeFavoritesSyncDocument);
+        const keys = new Set();
+
+        normalizedDocuments.forEach(documentValue => {
+            Object.keys(documentValue.entries).forEach(key => keys.add(key));
+            Object.keys(documentValue.deleted).forEach(key => keys.add(key));
+        });
+
+        const merged = {
+            schemaVersion: FAVORITES_SYNC_SCHEMA_VERSION,
+            updatedAt: 0,
+            entries: {},
+            deleted: {}
+        };
+
+        keys.forEach(key => {
+            let newestEntry = null;
+            let newestDeleted = null;
+
+            normalizedDocuments.forEach(documentValue => {
+                const entry = documentValue.entries[key];
+                if (entry && (!newestEntry || entry.updatedAt > newestEntry.updatedAt)) {
+                    newestEntry = entry;
+                }
+
+                const deleted = documentValue.deleted[key];
+                if (deleted && (!newestDeleted || deleted.updatedAt > newestDeleted.updatedAt)) {
+                    newestDeleted = deleted;
+                }
+            });
+
+            if (newestEntry && (!newestDeleted || newestEntry.updatedAt >= newestDeleted.updatedAt)) {
+                merged.entries[key] = { ...newestEntry };
+                merged.updatedAt = Math.max(merged.updatedAt, newestEntry.updatedAt);
+            } else if (newestDeleted) {
+                merged.deleted[key] = { ...newestDeleted };
+                merged.updatedAt = Math.max(merged.updatedAt, newestDeleted.updatedAt);
+            }
+        });
+
+        return merged;
+    }
+
+    function applyFavoritesSyncDocumentToLocalStorage(documentValue) {
+        const normalized = normalizeFavoritesSyncDocument(documentValue);
+        const localEntries = collectLocalFavoriteEntries();
+        let changed = false;
+
+        favoritesSyncApplyingRemote = true;
+        try {
+            Object.keys(localEntries).forEach(key => {
+                if (normalized.entries[key]) return;
+
+                localStorage.removeItem(scriptPrefix + key);
+                localStorage.removeItem(key);
+                changed = true;
+            });
+
+            Object.entries(normalized.entries).forEach(([key, record]) => {
+                if (localEntries[key] !== record.value) {
+                    localStorage.setItem(scriptPrefix + key, record.value);
+                    changed = true;
+                }
+
+                localStorage.removeItem(key);
+            });
+
+            Object.keys(normalized.deleted).forEach(key => {
+                localStorage.removeItem(scriptPrefix + key);
+                localStorage.removeItem(key);
+            });
+        } finally {
+            favoritesSyncApplyingRemote = false;
+        }
+
+        return changed;
+    }
+
+    function buildFavoritesSyncRemoteUrl() {
+        return `${normalizeCustomAudioWorkerUrl(customAudioSettings.workerUrl)}${FAVORITES_SYNC_REMOTE_PATH}`;
+    }
+
+    async function fetchRemoteFavoritesSyncDocument() {
+        await ensureCustomAudioSettingsLoaded();
+        if (!customAudioSettings.workerUrl) {
+            throw new Error('Set a Worker URL before syncing favorites.');
+        }
+
+        const response = await fetch(buildFavoritesSyncRemoteUrl(), {
+            method: 'GET',
+            headers: createCustomAudioRequestHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error(`Remote favorites fetch failed: HTTP ${response.status}`);
+        }
+
+        return normalizeFavoritesSyncDocument(await response.json());
+    }
+
+    async function putRemoteFavoritesSyncDocument(documentValue) {
+        await ensureCustomAudioSettingsLoaded();
+        if (!customAudioSettings.workerUrl) {
+            throw new Error('Set a Worker URL before syncing favorites.');
+        }
+
+        const response = await fetch(buildFavoritesSyncRemoteUrl(), {
+            method: 'PUT',
+            headers: createCustomAudioRequestHeaders({
+                'Content-Type': 'application/json'
+            }),
+            body: JSON.stringify(normalizeFavoritesSyncDocument(documentValue))
+        });
+
+        if (!response.ok) {
+            throw new Error(`Remote favorites upload failed: HTTP ${response.status}`);
+        }
+
+        return normalizeFavoritesSyncDocument(await response.json());
+    }
+
+    async function refreshCurrentPageAfterFavoritesSync(previousCurrentValue) {
+        if (!state.vocab) return;
+
+        const nextCurrentValue = getItem(state.vocab);
+        if (nextCurrentValue === previousCurrentValue) return;
+
+        const { index, exactState } = getStoredData(state.vocab);
+        state.currentExampleIndex = index;
+        state.exactSearch = exactState;
+        state.apiDataFetched = false;
+
+        renderImageAndPlayAudio(state.vocab, false);
+
+        try {
+            await getImmersionKitData(state.vocab, state.exactSearch);
+            preloadImages();
+            embedImageAndPlayAudio();
+            scheduleCustomAudioEnhancement();
+            scheduleDictationMasking();
+        } catch (error) {
+            console.warn('Failed to refresh page after favorites sync:', error);
+        }
+    }
+
+    async function runFavoritesSync(mode = 'sync', options = {}) {
+        const { silent = false, refreshCurrentPage = true } = options;
+
+        if (favoritesSyncInFlight) {
+            return { skipped: true };
+        }
+
+        favoritesSyncInFlight = true;
+        const localRevisionAtStart = favoritesSyncLocalRevision;
+        const previousCurrentValue = state.vocab ? getItem(state.vocab) : null;
+
+        try {
+            await ensureCustomAudioSettingsLoaded();
+            const remoteBeforeDocument = await fetchRemoteFavoritesSyncDocument();
+            let mergedDocument = remoteBeforeDocument;
+
+            if (mode !== 'pull') {
+                const localDocument = await buildLocalFavoritesSyncDocument(remoteBeforeDocument);
+                const locallyMergedDocument = mergeFavoritesSyncDocuments(localDocument, remoteBeforeDocument);
+                const remoteAfterDocument = await putRemoteFavoritesSyncDocument(locallyMergedDocument);
+                mergedDocument = mergeFavoritesSyncDocuments(locallyMergedDocument, remoteAfterDocument);
+            }
+
+            mergedDocument = await mergeLatestLocalFavoritesIfChanged(mergedDocument, localRevisionAtStart);
+            const changed = applyFavoritesSyncDocumentToLocalStorage(mergedDocument);
+            const savedDocument = await queueFavoritesSyncStateReplacement(mergedDocument);
+
+            if (refreshCurrentPage && changed) {
+                await refreshCurrentPageAfterFavoritesSync(previousCurrentValue);
+            }
+
+            return {
+                skipped: false,
+                changed,
+                favoriteCount: Object.keys(savedDocument.entries).length,
+                deletedCount: Object.keys(savedDocument.deleted).length
+            };
+        } catch (error) {
+            if (!silent) {
+                alert(`Favorites sync failed: ${error instanceof Error ? error.message : error}`);
+            }
+            throw error;
+        } finally {
+            favoritesSyncInFlight = false;
+        }
+    }
+
+    function scheduleFavoritesAutoSync() {
+        clearTimeout(favoritesSyncTimer);
+
+        favoritesSyncTimer = setTimeout(async () => {
+            try {
+                await ensureCustomAudioSettingsLoaded();
+                if (!customAudioSettings.syncFavorites || !customAudioSettings.workerUrl) return;
+
+                await runFavoritesSync('sync', { silent: true });
+            } catch (error) {
+                console.warn('Automatic favorites sync failed:', error);
+            }
+        }, FAVORITES_SYNC_DEBOUNCE_MS);
+    }
+
+    async function handleFavoritesSyncButtonClick(mode) {
+        try {
+            const overlay = document.getElementById('overlayMenu');
+            if (overlay) {
+                await saveCustomAudioSettingsFromOverlay(overlay);
+            }
+
+            const result = await runFavoritesSync(mode, { silent: false });
+            if (result?.skipped) {
+                alert('Favorites sync is already running.');
+                return;
+            }
+
+            alert(`Favorites sync complete. ${result.favoriteCount} saved, ${result.deletedCount} deleted markers retained.`);
+        } catch (error) {
+            console.error('Favorites sync failed:', error);
+        }
     }
 
     // IndexedDB Manager
@@ -3673,6 +4123,7 @@
         finalizeSaveConfig();
         setVocabSize();
         setPageWidth();
+        scheduleFavoritesAutoSync();
     }
 
     function gatherChanges(inputs) {
@@ -4177,6 +4628,27 @@
         return row;
     }
 
+    function createCustomAudioCheckboxRow(labelText, inputId, checked) {
+        const row = document.createElement('div');
+        row.style.marginTop = '10px';
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '10px';
+
+        const label = document.createElement('label');
+        label.htmlFor = inputId;
+        label.textContent = labelText;
+        label.style.minWidth = '150px';
+
+        const input = document.createElement('input');
+        input.id = inputId;
+        input.type = 'checkbox';
+        input.checked = Boolean(checked);
+
+        row.append(label, input);
+        return row;
+    }
+
     function createCustomAudioSettingsSection() {
         const section = document.createElement('div');
         section.style.marginTop = '20px';
@@ -4189,7 +4661,7 @@
         title.style.fontSize = '1rem';
 
         const description = document.createElement('p');
-        description.textContent = 'Upload your own sentence audio. Files are cached locally in IndexedDB, and optional remote sync uses a Cloudflare Worker in front of R2.';
+        description.textContent = 'Upload your own sentence audio and optionally sync favorite example selections. Files and sync state use the same Cloudflare Worker in front of R2.';
         description.style.margin = '0 0 10px 0';
         description.style.fontSize = '0.9rem';
         description.style.opacity = '0.8';
@@ -4222,11 +4694,28 @@
                 'number'
             )
         );
+        section.appendChild(
+            createCustomAudioCheckboxRow(
+                'Sync Favorites',
+                'custom-audio-sync-favorites',
+                customAudioSettings.syncFavorites
+            )
+        );
 
         const actions = document.createElement('div');
         actions.style.marginTop = '10px';
         actions.style.display = 'flex';
+        actions.style.flexWrap = 'wrap';
+        actions.style.gap = '10px';
         actions.style.justifyContent = 'center';
+
+        const syncFavoritesButton = createButton('Sync Favorites Now', '0', async () => {
+            await handleFavoritesSyncButtonClick('sync');
+        }, '180px');
+
+        const pullFavoritesButton = createButton('Pull Favorites', '0', async () => {
+            await handleFavoritesSyncButtonClick('pull');
+        }, '160px');
 
         const clearCacheButton = createButton('Clear Custom Audio Cache', '0', async () => {
             createConfirmationPopup(
@@ -4242,7 +4731,7 @@
         clearCacheButton.style.backgroundColor = '#C82800';
         clearCacheButton.style.color = 'white';
 
-        actions.appendChild(clearCacheButton);
+        actions.append(syncFavoritesButton, pullFavoritesButton, clearCacheButton);
         section.appendChild(actions);
 
         return section;
@@ -4252,11 +4741,13 @@
         const workerUrl = overlay.querySelector('#custom-audio-worker-url')?.value || '';
         const authToken = overlay.querySelector('#custom-audio-auth-token')?.value || '';
         const cacheMaxMB = overlay.querySelector('#custom-audio-cache-max-mb')?.value || String(CUSTOM_AUDIO_DEFAULTS.cacheMaxMB);
+        const syncFavorites = Boolean(overlay.querySelector('#custom-audio-sync-favorites')?.checked);
 
         await saveCustomAudioSettings({
             workerUrl,
             authToken,
-            cacheMaxMB
+            cacheMaxMB,
+            syncFavorites
         });
     }
 
@@ -4395,9 +4886,15 @@
     loadConfig();
     injectDictationStyles();
     updateDictationModeClass();
-    ensureCustomAudioSettingsLoaded().catch(error => {
-        console.error('Failed to load custom audio settings:', error);
-    });
+    ensureCustomAudioSettingsLoaded()
+        .then(() => {
+            if (customAudioSettings.syncFavorites && customAudioSettings.workerUrl) {
+                return runFavoritesSync('sync', { silent: true });
+            }
+        })
+        .catch(error => {
+            console.error('Failed to initialize Cloudflare settings or favorites sync:', error);
+        });
     setPageWidth();
     setVocabSize();
     scheduleCustomAudioEnhancement();

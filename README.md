@@ -7,7 +7,7 @@ This fork differs significantly from the upstream [AwooDesu/JPDB-Immersion-Kit-E
 - An unpacked Chrome extension build in [extension](extension/).
 - A migration/export userscript in [userscripts](userscripts/) for backing up userscript data.
 - Custom jpdb sentence-audio upload/playback for examples without built-in audio.
-- Optional Cloudflare Worker + R2 storage for custom audio, with local IndexedDB caching.
+- Optional Cloudflare Worker + R2 storage for custom audio and favorite sync, with local caching.
 - Keyboard shortcut support for playing the current jpdb answer-box sentence audio.
 
 A userscript for **jpdb.io** that embeds anime examples from **ImmersionKit** directly into the site.  
@@ -69,7 +69,7 @@ Migration flow:
 2. Disable the original userscript so it does not run at the same time as the extension.
 3. If you want a portable backup, install the export userscript in Violentmonkey, download the backup JSON, then use `Import Backup` from the extension's in-page settings menu on `jpdb.io`.
 
-The extension also supports uploading custom sentence audio for jpdb examples that are missing built-in audio. The recommended remote backend is Cloudflare Worker + R2; setup files are in [cloudflare](cloudflare/).
+The extension also supports uploading custom sentence audio for jpdb examples that are missing built-in audio, plus optional cross-device sync for selected Immersion Kit examples. The recommended remote backend is Cloudflare Worker + R2; setup files are in [cloudflare](cloudflare/).
 
 ### **Audio Playback Note**  
 If autoplay doesn't work, check your browser's site settings (click the lock icon next to the URL) and allow automatic audio playback.  

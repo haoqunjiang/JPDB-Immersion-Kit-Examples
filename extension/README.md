@@ -20,8 +20,13 @@ The extension can now add upload and playback controls for jpdb example sentence
 - Local cache: browser IndexedDB on `jpdb.io`
 - Remote store: optional Cloudflare Worker + R2
 - Cache behavior: local first, remote on miss
+- Favorite sync: optional, using the same Worker URL and auth token
 
 Cloudflare setup files live in [cloudflare](../cloudflare/). Start with [cloudflare/README.md](../cloudflare/README.md).
+
+## Favorite Sync
+
+Enable `Sync Favorites` in the in-page settings menu after configuring the Worker URL and auth token. The extension syncs selected Immersion Kit examples and blacklist entries across devices with timestamp-based merging.
 
 ## Dictation Mode
 
