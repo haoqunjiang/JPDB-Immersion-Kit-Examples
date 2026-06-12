@@ -21,23 +21,18 @@ Existing in-page settings are migrated from `jpdb.io` local storage into extensi
 
 ## iOS Safari
 
-This directory is Safari Web Extension source. The generated iOS Xcode wrapper lives in [../safari](../safari/).
-
-To regenerate it, run Apple's Safari Web Extension converter on a Mac with full Xcode installed:
+This directory is Safari Web Extension source. To package it for iPhone Safari, run Apple's Safari Web Extension converter on a Mac with full Xcode installed:
 
 ```sh
 xcrun safari-web-extension-converter extension \
   --project-location safari \
   --app-name "JPDB Immersion Kit Examples" \
-  --bundle-identifier "com.haoqunjiang.jpdb-immersion-kit-examples" \
-  --ios-only \
-  --copy-resources \
-  --no-open \
-  --no-prompt \
-  --force
+  --bundle-identifier "com.example.jpdb-immersion-kit-examples"
 ```
 
 Then open the generated Xcode project, select an iOS-capable signing team and bundle identifier, build/run the containing app on the iPhone, and enable the extension in iOS Settings > Safari > Extensions.
+
+This workspace does not currently have `safari-web-extension-converter` installed, so the Xcode wrapper was not generated here.
 
 ## Custom Example Audio
 

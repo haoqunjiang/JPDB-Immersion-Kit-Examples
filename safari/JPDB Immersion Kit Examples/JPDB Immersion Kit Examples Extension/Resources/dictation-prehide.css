@@ -1,0 +1,12 @@
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .review-hidden .answer-box > .plain > :nth-child(3),
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .review-reveal .answer-box > .plain > :nth-child(3),
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .answer-box .highlight,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .result.vocabulary .highlight,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-examples .highlight,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) #immersion-kit-container .highlight,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .jpdb-ik-vocab-highlight,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) #immersion-kit-container span[style*="--outline-input-color"],
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-composed-of-kanji,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-composed-of-vocabulary {
+    visibility: hidden !important;
+}

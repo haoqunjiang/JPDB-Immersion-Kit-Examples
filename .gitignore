@@ -19,6 +19,12 @@ cloudflare/.dev.vars
 dist/
 build/
 
+# macOS and Xcode local state
+.DS_Store
+**/.DS_Store
+**/xcuserdata/
+*.xcuserstate
+
 # Local custom-audio test files
 *.mp3
 *.m4a

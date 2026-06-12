@@ -1,0 +1,652 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D72D93D62FDAFA8C0033F0B4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72D93D52FDAFA8C0033F0B4 /* AppDelegate.swift */; };
+		D72D93DA2FDAFA8C0033F0B4 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = D72D93D82FDAFA8C0033F0B4 /* Main.html */; };
+		D72D93DC2FDAFA8C0033F0B4 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = D72D93DB2FDAFA8C0033F0B4 /* Icon.png */; };
+		D72D93DE2FDAFA8C0033F0B4 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = D72D93DD2FDAFA8C0033F0B4 /* Style.css */; };
+		D72D93E02FDAFA8C0033F0B4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72D93DF2FDAFA8C0033F0B4 /* SceneDelegate.swift */; };
+		D72D93E22FDAFA8C0033F0B4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72D93E12FDAFA8C0033F0B4 /* ViewController.swift */; };
+		D72D93E52FDAFA8C0033F0B4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D72D93E32FDAFA8C0033F0B4 /* LaunchScreen.storyboard */; };
+		D72D93E82FDAFA8C0033F0B4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D72D93E62FDAFA8C0033F0B4 /* Main.storyboard */; };
+		D72D93F02FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D72D93EF2FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D72D93F52FDAFA8E0033F0B4 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72D93F42FDAFA8E0033F0B4 /* SafariWebExtensionHandler.swift */; };
+		D72D93F72FDAFA8E0033F0B4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D72D93E92FDAFA8E0033F0B4 /* Assets.xcassets */; };
+		D72D940D2FDAFA8E0033F0B4 /* dictation-bootstrap.js in Resources */ = {isa = PBXBuildFile; fileRef = D72D94022FDAFA8E0033F0B4 /* dictation-bootstrap.js */; };
+		D72D940E2FDAFA8E0033F0B4 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = D72D94032FDAFA8E0033F0B4 /* background.js */; };
+		D72D940F2FDAFA8E0033F0B4 /* options.js in Resources */ = {isa = PBXBuildFile; fileRef = D72D94042FDAFA8E0033F0B4 /* options.js */; };
+		D72D94102FDAFA8E0033F0B4 /* dictation-prehide.css in Resources */ = {isa = PBXBuildFile; fileRef = D72D94052FDAFA8E0033F0B4 /* dictation-prehide.css */; };
+		D72D94112FDAFA8E0033F0B4 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D72D94062FDAFA8E0033F0B4 /* README.md */; };
+		D72D94122FDAFA8E0033F0B4 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = D72D94072FDAFA8E0033F0B4 /* icons */; };
+		D72D94132FDAFA8E0033F0B4 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = D72D94082FDAFA8E0033F0B4 /* manifest.json */; };
+		D72D94142FDAFA8E0033F0B4 /* options.html in Resources */ = {isa = PBXBuildFile; fileRef = D72D94092FDAFA8E0033F0B4 /* options.html */; };
+		D72D94152FDAFA8E0033F0B4 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = D72D940A2FDAFA8E0033F0B4 /* content.js */; };
+		D72D94162FDAFA8E0033F0B4 /* settings.js in Resources */ = {isa = PBXBuildFile; fileRef = D72D940B2FDAFA8E0033F0B4 /* settings.js */; };
+		D72D94172FDAFA8E0033F0B4 /* options.css in Resources */ = {isa = PBXBuildFile; fileRef = D72D940C2FDAFA8E0033F0B4 /* options.css */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D72D93F12FDAFA8E0033F0B4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D72D93CA2FDAFA8C0033F0B4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D72D93EE2FDAFA8E0033F0B4;
+			remoteInfo = "JPDB Immersion Kit Examples Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D72D93FD2FDAFA8E0033F0B4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D72D93F02FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D72D93D22FDAFA8C0033F0B4 /* JPDB Immersion Kit Examples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "JPDB Immersion Kit Examples.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D72D93D52FDAFA8C0033F0B4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		D72D93D92FDAFA8C0033F0B4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		D72D93DB2FDAFA8C0033F0B4 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		D72D93DD2FDAFA8C0033F0B4 /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		D72D93DF2FDAFA8C0033F0B4 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		D72D93E12FDAFA8C0033F0B4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		D72D93E42FDAFA8C0033F0B4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		D72D93E72FDAFA8C0033F0B4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		D72D93E92FDAFA8E0033F0B4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D72D93EA2FDAFA8E0033F0B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D72D93EF2FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "JPDB Immersion Kit Examples Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D72D93F42FDAFA8E0033F0B4 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		D72D93F62FDAFA8E0033F0B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D72D94022FDAFA8E0033F0B4 /* dictation-bootstrap.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "dictation-bootstrap.js"; path = "Resources/dictation-bootstrap.js"; sourceTree = "<group>"; };
+		D72D94032FDAFA8E0033F0B4 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = Resources/background.js; sourceTree = "<group>"; };
+		D72D94042FDAFA8E0033F0B4 /* options.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = options.js; path = Resources/options.js; sourceTree = "<group>"; };
+		D72D94052FDAFA8E0033F0B4 /* dictation-prehide.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = "dictation-prehide.css"; path = "Resources/dictation-prehide.css"; sourceTree = "<group>"; };
+		D72D94062FDAFA8E0033F0B4 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = Resources/README.md; sourceTree = "<group>"; };
+		D72D94072FDAFA8E0033F0B4 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = Resources/icons; sourceTree = "<group>"; };
+		D72D94082FDAFA8E0033F0B4 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = Resources/manifest.json; sourceTree = "<group>"; };
+		D72D94092FDAFA8E0033F0B4 /* options.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = options.html; path = Resources/options.html; sourceTree = "<group>"; };
+		D72D940A2FDAFA8E0033F0B4 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = Resources/content.js; sourceTree = "<group>"; };
+		D72D940B2FDAFA8E0033F0B4 /* settings.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = settings.js; path = Resources/settings.js; sourceTree = "<group>"; };
+		D72D940C2FDAFA8E0033F0B4 /* options.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = options.css; path = Resources/options.css; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D72D93CF2FDAFA8C0033F0B4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D72D93EC2FDAFA8E0033F0B4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D72D93C92FDAFA8C0033F0B4 = {
+			isa = PBXGroup;
+			children = (
+				D72D93D42FDAFA8C0033F0B4 /* JPDB Immersion Kit Examples */,
+				D72D93F32FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension */,
+				D72D93D32FDAFA8C0033F0B4 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D72D93D32FDAFA8C0033F0B4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D72D93D22FDAFA8C0033F0B4 /* JPDB Immersion Kit Examples.app */,
+				D72D93EF2FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D72D93D42FDAFA8C0033F0B4 /* JPDB Immersion Kit Examples */ = {
+			isa = PBXGroup;
+			children = (
+				D72D93D52FDAFA8C0033F0B4 /* AppDelegate.swift */,
+				D72D93DF2FDAFA8C0033F0B4 /* SceneDelegate.swift */,
+				D72D93E12FDAFA8C0033F0B4 /* ViewController.swift */,
+				D72D93E32FDAFA8C0033F0B4 /* LaunchScreen.storyboard */,
+				D72D93E62FDAFA8C0033F0B4 /* Main.storyboard */,
+				D72D93E92FDAFA8E0033F0B4 /* Assets.xcassets */,
+				D72D93EA2FDAFA8E0033F0B4 /* Info.plist */,
+				D72D93D72FDAFA8C0033F0B4 /* Resources */,
+			);
+			path = "JPDB Immersion Kit Examples";
+			sourceTree = "<group>";
+		};
+		D72D93D72FDAFA8C0033F0B4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D72D93D82FDAFA8C0033F0B4 /* Main.html */,
+				D72D93DB2FDAFA8C0033F0B4 /* Icon.png */,
+				D72D93DD2FDAFA8C0033F0B4 /* Style.css */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		D72D93F32FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension */ = {
+			isa = PBXGroup;
+			children = (
+				D72D94012FDAFA8E0033F0B4 /* Resources */,
+				D72D93F42FDAFA8E0033F0B4 /* SafariWebExtensionHandler.swift */,
+				D72D93F62FDAFA8E0033F0B4 /* Info.plist */,
+			);
+			path = "JPDB Immersion Kit Examples Extension";
+			sourceTree = "<group>";
+		};
+		D72D94012FDAFA8E0033F0B4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D72D94022FDAFA8E0033F0B4 /* dictation-bootstrap.js */,
+				D72D94032FDAFA8E0033F0B4 /* background.js */,
+				D72D94042FDAFA8E0033F0B4 /* options.js */,
+				D72D94052FDAFA8E0033F0B4 /* dictation-prehide.css */,
+				D72D94062FDAFA8E0033F0B4 /* README.md */,
+				D72D94072FDAFA8E0033F0B4 /* icons */,
+				D72D94082FDAFA8E0033F0B4 /* manifest.json */,
+				D72D94092FDAFA8E0033F0B4 /* options.html */,
+				D72D940A2FDAFA8E0033F0B4 /* content.js */,
+				D72D940B2FDAFA8E0033F0B4 /* settings.js */,
+				D72D940C2FDAFA8E0033F0B4 /* options.css */,
+			);
+			name = Resources;
+			path = "JPDB Immersion Kit Examples Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D72D93D12FDAFA8C0033F0B4 /* JPDB Immersion Kit Examples */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D72D93FE2FDAFA8E0033F0B4 /* Build configuration list for PBXNativeTarget "JPDB Immersion Kit Examples" */;
+			buildPhases = (
+				D72D93CE2FDAFA8C0033F0B4 /* Sources */,
+				D72D93CF2FDAFA8C0033F0B4 /* Frameworks */,
+				D72D93D02FDAFA8C0033F0B4 /* Resources */,
+				D72D93FD2FDAFA8E0033F0B4 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D72D93F22FDAFA8E0033F0B4 /* PBXTargetDependency */,
+			);
+			name = "JPDB Immersion Kit Examples";
+			packageProductDependencies = (
+			);
+			productName = "JPDB Immersion Kit Examples";
+			productReference = D72D93D22FDAFA8C0033F0B4 /* JPDB Immersion Kit Examples.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D72D93EE2FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D72D93FA2FDAFA8E0033F0B4 /* Build configuration list for PBXNativeTarget "JPDB Immersion Kit Examples Extension" */;
+			buildPhases = (
+				D72D93EB2FDAFA8E0033F0B4 /* Sources */,
+				D72D93EC2FDAFA8E0033F0B4 /* Frameworks */,
+				D72D93ED2FDAFA8E0033F0B4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "JPDB Immersion Kit Examples Extension";
+			packageProductDependencies = (
+			);
+			productName = "JPDB Immersion Kit Examples Extension";
+			productReference = D72D93EF2FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D72D93CA2FDAFA8C0033F0B4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					D72D93D12FDAFA8C0033F0B4 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					D72D93EE2FDAFA8E0033F0B4 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+				};
+			};
+			buildConfigurationList = D72D93CD2FDAFA8C0033F0B4 /* Build configuration list for PBXProject "JPDB Immersion Kit Examples" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D72D93C92FDAFA8C0033F0B4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D72D93D32FDAFA8C0033F0B4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D72D93D12FDAFA8C0033F0B4 /* JPDB Immersion Kit Examples */,
+				D72D93EE2FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D72D93D02FDAFA8C0033F0B4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D72D93DC2FDAFA8C0033F0B4 /* Icon.png in Resources */,
+				D72D93E82FDAFA8C0033F0B4 /* Main.storyboard in Resources */,
+				D72D93E52FDAFA8C0033F0B4 /* LaunchScreen.storyboard in Resources */,
+				D72D93DA2FDAFA8C0033F0B4 /* Main.html in Resources */,
+				D72D93F72FDAFA8E0033F0B4 /* Assets.xcassets in Resources */,
+				D72D93DE2FDAFA8C0033F0B4 /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D72D93ED2FDAFA8E0033F0B4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D72D940E2FDAFA8E0033F0B4 /* background.js in Resources */,
+				D72D94162FDAFA8E0033F0B4 /* settings.js in Resources */,
+				D72D94132FDAFA8E0033F0B4 /* manifest.json in Resources */,
+				D72D94102FDAFA8E0033F0B4 /* dictation-prehide.css in Resources */,
+				D72D94142FDAFA8E0033F0B4 /* options.html in Resources */,
+				D72D94112FDAFA8E0033F0B4 /* README.md in Resources */,
+				D72D94122FDAFA8E0033F0B4 /* icons in Resources */,
+				D72D94152FDAFA8E0033F0B4 /* content.js in Resources */,
+				D72D940F2FDAFA8E0033F0B4 /* options.js in Resources */,
+				D72D94172FDAFA8E0033F0B4 /* options.css in Resources */,
+				D72D940D2FDAFA8E0033F0B4 /* dictation-bootstrap.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D72D93CE2FDAFA8C0033F0B4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D72D93E22FDAFA8C0033F0B4 /* ViewController.swift in Sources */,
+				D72D93D62FDAFA8C0033F0B4 /* AppDelegate.swift in Sources */,
+				D72D93E02FDAFA8C0033F0B4 /* SceneDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D72D93EB2FDAFA8E0033F0B4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D72D93F52FDAFA8E0033F0B4 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D72D93F22FDAFA8E0033F0B4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D72D93EE2FDAFA8E0033F0B4 /* JPDB Immersion Kit Examples Extension */;
+			targetProxy = D72D93F12FDAFA8E0033F0B4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		D72D93D82FDAFA8C0033F0B4 /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D72D93D92FDAFA8C0033F0B4 /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		D72D93E32FDAFA8C0033F0B4 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D72D93E42FDAFA8C0033F0B4 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		D72D93E62FDAFA8C0033F0B4 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D72D93E72FDAFA8C0033F0B4 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		D72D93F82FDAFA8E0033F0B4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D72D93F92FDAFA8E0033F0B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D72D93FB2FDAFA8E0033F0B4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9KWPX28K59;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "JPDB Immersion Kit Examples Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "JPDB Immersion Kit Examples Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.haoqunjiang.jpdb-immersion-kit-examples.local20260612.extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D72D93FC2FDAFA8E0033F0B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9KWPX28K59;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "JPDB Immersion Kit Examples Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "JPDB Immersion Kit Examples Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.haoqunjiang.jpdb-immersion-kit-examples.local20260612.extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D72D93FF2FDAFA8E0033F0B4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9KWPX28K59;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "JPDB Immersion Kit Examples/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "JPDB Immersion Kit Examples";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.haoqunjiang.jpdb-immersion-kit-examples.local20260612";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D72D94002FDAFA8E0033F0B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9KWPX28K59;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "JPDB Immersion Kit Examples/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "JPDB Immersion Kit Examples";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.haoqunjiang.jpdb-immersion-kit-examples.local20260612";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D72D93CD2FDAFA8C0033F0B4 /* Build configuration list for PBXProject "JPDB Immersion Kit Examples" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D72D93F82FDAFA8E0033F0B4 /* Debug */,
+				D72D93F92FDAFA8E0033F0B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D72D93FA2FDAFA8E0033F0B4 /* Build configuration list for PBXNativeTarget "JPDB Immersion Kit Examples Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D72D93FB2FDAFA8E0033F0B4 /* Debug */,
+				D72D93FC2FDAFA8E0033F0B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D72D93FE2FDAFA8E0033F0B4 /* Build configuration list for PBXNativeTarget "JPDB Immersion Kit Examples" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D72D93FF2FDAFA8E0033F0B4 /* Debug */,
+				D72D94002FDAFA8E0033F0B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D72D93CA2FDAFA8C0033F0B4 /* Project object */;
+}
