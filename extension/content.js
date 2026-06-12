@@ -2837,6 +2837,23 @@
         return window.matchMedia('(max-width: 640px), (hover: none) and (pointer: coarse)').matches;
     }
 
+    function applyWideModeSizing(containerDiv) {
+        containerDiv.style.flex = '0 0 auto';
+        containerDiv.style.width = 'auto';
+        containerDiv.style.maxWidth = 'none';
+
+        const arrowWrapperDiv = containerDiv.querySelector('.jpdb-ik-arrow-wrapper');
+        if (arrowWrapperDiv) {
+            arrowWrapperDiv.style.maxWidth = 'none';
+        }
+
+        const imageWrapperDiv = containerDiv.querySelector('#image-wrapper');
+        if (imageWrapperDiv) {
+            imageWrapperDiv.style.width = CONFIG.IMAGE_WIDTH;
+            imageWrapperDiv.style.flex = `0 0 ${CONFIG.IMAGE_WIDTH}`;
+        }
+    }
+
     function appendContainer(containerDiv) {
         // Append the container div to the appropriate section based on configuration
         const resultVocabularySection = document.querySelector('.result.vocabulary');
@@ -2853,6 +2870,7 @@
             wrapper.className = 'jpdb-ik-wide-wrapper';
             wrapper.style.display = 'flex';
             wrapper.style.alignItems = 'flex-start';
+            applyWideModeSizing(containerDiv);
             styleSheet.insertRule('.subsection-meanings { max-width: none !important; }', styleSheet.cssRules.length);
 
             const originalContentWrapper = document.createElement('div');
