@@ -2716,7 +2716,7 @@
 
         if (CONFIG.ENABLE_EXAMPLE_TRANSLATION && translation) {
             const translationText = document.createElement('div');
-            translationText.className = 'jpdb-ik-example-text';
+            translationText.className = 'jpdb-ik-example-text jpdb-ik-example-translation';
             translationText.innerHTML = replaceSpecialCharacters(translation);
             translationText.style.marginTop = '5px';
             translationText.style.fontSize = CONFIG.TRANSLATION_FONT_SIZE;
@@ -3261,6 +3261,125 @@
         return normalizeDictationText(getVisibleTextWithoutRuby(element)) === normalizeDictationText(word);
     }
 
+    function isLikelyEnglishTranslationText(text) {
+        const value = String(text || '').replace(/\s+/g, ' ').trim();
+        if (!value || !/[A-Za-z]/.test(value)) return false;
+        return !/[ぁ-んァ-ヶ一-龯々〆ヵヶ]/.test(value);
+    }
+
+    function isTextNodeAfterElement(node, element) {
+        if (!node || !element) return false;
+        return Boolean(element.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }
+
+    function isTextNodeBeforeElement(node, element) {
+        if (!node || !element) return false;
+        return Boolean(element.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_PRECEDING);
+    }
+
+    function getDictationSentenceEditLink(root) {
+        return root && root.querySelector('a[href*="edit-shown-sentence"], a[href*="edit_shown_sentence"]');
+    }
+
+    function getDictationMeaningsEditLink(root) {
+        return root && root.querySelector('a[href*="edit-shown-meanings"], a[href*="edit_shown_meanings"]');
+    }
+
+    function isDictationTranslationTextNode(node) {
+        if (!node || !isLikelyEnglishTranslationText(node.nodeValue)) return false;
+
+        const parentElement = node.parentElement;
+        if (!parentElement) return false;
+        if (parentElement.closest([
+            '.jpdb-dictation-answer-translation',
+            '.jpdb-dictation-particle-layer',
+            '.jpdb-custom-audio-controls',
+            'rt',
+            'a',
+            'button',
+            'input',
+            'textarea',
+            'select'
+        ].join(', '))) {
+            return false;
+        }
+
+        const sentenceElement = parentElement.closest('.sentence');
+        if (sentenceElement) {
+            const sentenceRoot = sentenceElement.closest('.card-sentence') || sentenceElement;
+            const editSentenceLink = getDictationSentenceEditLink(sentenceRoot);
+            if (editSentenceLink) {
+                return isTextNodeAfterElement(node, editSentenceLink);
+            }
+        }
+
+        const answerBox = parentElement.closest('.answer-box');
+        const editSentenceLink = getDictationSentenceEditLink(answerBox);
+        if (!editSentenceLink || !isTextNodeAfterElement(node, editSentenceLink)) {
+            return false;
+        }
+
+        const meaningsEditLink = getDictationMeaningsEditLink(answerBox);
+        return !meaningsEditLink || isTextNodeBeforeElement(node, meaningsEditLink);
+    }
+
+    function wrapDictationTranslationTextNodes(root) {
+        if (!root) return [];
+
+        const textNodes = [];
+        const walker = document.createTreeWalker(
+            root,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode(node) {
+                    return isDictationTranslationTextNode(node)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                }
+            }
+        );
+
+        while (walker.nextNode()) {
+            textNodes.push(walker.currentNode);
+        }
+
+        return textNodes.map(node => {
+            const wrapper = document.createElement('span');
+            wrapper.className = 'jpdb-dictation-answer-translation';
+            node.parentNode.insertBefore(wrapper, node);
+            wrapper.appendChild(node);
+            return wrapper;
+        });
+    }
+
+    function getDictationTranslationTargets(answerBox) {
+        const targets = new Set();
+
+        document.querySelectorAll('#immersion-kit-container .jpdb-ik-example-translation').forEach(element => {
+            targets.add(element);
+        });
+
+        if (answerBox) {
+            answerBox.querySelectorAll([
+                '.jpdb-dictation-answer-translation',
+                '.card-sentence .translation',
+                '.card-sentence .sentence-translation',
+                '.card-sentence [class*="translation"]',
+                '.card-sentence [class*="Translation"]'
+            ].join(', ')).forEach(element => {
+                if (isLikelyEnglishTranslationText(getVisibleTextWithoutRuby(element))) {
+                    targets.add(element);
+                }
+            });
+
+            wrapDictationTranslationTextNodes(answerBox).forEach(element => {
+                targets.add(element);
+            });
+        }
+
+        return Array.from(targets).filter(element => hasVisibleDictationArea(element));
+    }
+
     function randomBetween(min, max) {
         return min + Math.random() * (max - min);
     }
@@ -3718,6 +3837,10 @@
             targets.add(element);
         });
 
+        getDictationTranslationTargets(answerBox).forEach(element => {
+            targets.add(element);
+        });
+
         document.querySelectorAll('.review-reveal .answer-box a.plain[href*="/vocabulary/"], .review-reveal .answer-box a.plain[href*="/kanji/"]').forEach(element => {
             if (hasVisibleDictationArea(element) && isExactDictationWord(element, word)) {
                 targets.add(element);
@@ -3843,6 +3966,8 @@
             '.jpdb-dictation-mask',
             '.answer-box > .plain',
             '.answer-box .card-sentence .sentence',
+            '.jpdb-dictation-answer-translation',
+            '.jpdb-ik-example-translation',
             '.subsection-examples .used-in .jp',
             '#immersion-kit-container #image-wrapper'
         ].join(', '));

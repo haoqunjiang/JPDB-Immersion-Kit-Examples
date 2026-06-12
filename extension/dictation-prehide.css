@@ -6,6 +6,10 @@ html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) #immersion-kit-container .highlight,
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .jpdb-ik-vocab-highlight,
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) #immersion-kit-container span[style*="--outline-input-color"],
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .jpdb-dictation-answer-translation,
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .answer-box .card-sentence [class*="translation"],
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .answer-box .card-sentence [class*="Translation"],
+html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) #immersion-kit-container .jpdb-ik-example-translation,
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-composed-of-kanji,
 html:not(.jpdb-dictation-mode-inactive):not(.jpdb-dictation-revealing):not(.jpdb-dictation-revealed) .subsection-composed-of-vocabulary {
     visibility: hidden !important;
